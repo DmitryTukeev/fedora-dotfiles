@@ -1,0 +1,83 @@
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# 2. Пользовательские пути и профили
+export PATH="$HOME/.local/bin:$PATH"
+[[ -f "$HOME/.local/bin/env" ]] && source "$HOME/.local/bin/env"
+[[ -f "$HOME/.profile" ]] && source "$HOME/.profile"
+
+# 3. Базовые переменные окружения и Podman-сокет для lazydocker
+export EDITOR="nvim"
+export VISUAL="nvim"
+export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
+
+# 4. Опции шелла и режим клавиш
+setopt INTERACTIVE_COMMENTS
+bindkey -e
+
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '^g^g' edit-command-line
+
+# 5. Настройки истории
+HISTSIZE=50000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# 6. Менеджер плагинов Zinit (облегченная инициализация без лишних annex-ов)
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+if [[ ! -d $ZINIT_HOME ]]; then
+    mkdir -p "${ZINIT_HOME:h}"
+    git clone --depth=1 https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+source "$ZINIT_HOME/zinit.zsh"
+
+# Загрузка автодополнений и сниппетов
+zinit ice blockf
+zinit light zsh-users/zsh-completions
+zinit snippet OMZP::git
+
+autoload -Uz compinit && compinit
+zinit cdreplay -q
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+
+# fzf-tab загружается сразу после compinit
+zinit light Aloxaf/fzf-tab
+
+# 7. Интеграции шелла
+command -v fzf >/dev/null 2>&1 && source <(fzf --zsh)
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+if command -v oh-my-posh >/dev/null 2>&1 && [[ -f "$HOME/.omp_linux_conf.toml" ]]; then
+    eval "$(oh-my-posh init zsh --config "$HOME/.omp_linux_conf.toml")"
+fi
+
+# 8. Алиасы
+alias l='eza -alF --icons'
+alias ls='eza -F --icons'
+alias lsz='eza -alF --icons --total-size'
+alias lt='eza -alF --icons -T -L3'
+alias c='clear'
+alias upd='brew update && brew upgrade && brew cleanup && flatpak update -y && flatpak uninstall --unused -y && zinit self-update && zinit update --all && npm up -g'
+alias v='nvim'
+alias p='pwd'
+alias f='yazi'
+alias tm='tmux'
+alias lg='lazygit'
+alias ld='lazydocker'
+alias oc='opencode'
+alias diffl='git -c diff.external=difft log -p --ext-diff'
+alias diffs='git -c diff.external=difft show --ext-diff'
+alias diffu='git -c diff.external=difft diff'
+
+# 9. Плагины подсветки и автоподсказок (СТРОГО В КОНЦЕ ФАЙЛА)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=60'
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting

@@ -1,0 +1,31 @@
+command = /home/linuxbrew/.linuxbrew/bin/zsh --login
+# --- Шрифт и цветовая схема (из вашего WezTerm) ---
+font-family = "Hack Nerd Font"
+font-size = 12
+# В Ghostty тема пишется с пробелами (или используйте Catppuccin Mocha как на скриншоте)
+theme = One Half Dark
+
+# --- Параметры окна (из вашего WezTerm и скриншота) ---
+window-width = 160
+window-height = 45
+window-padding-x = 10
+window-padding-y = 10
+window-decoration = true
+mouse-hide-while-typing = true
+
+# --- Keybindings: Сплиты и навигация (стиль Tmux с префиксом Ctrl+a) ---
+# В Ghostty последовательные нажатия (leader key) задаются через знак ">"
+
+# Разделение окна: "%" — по горизонтали (справа), '"' — по вертикали (снизу)
+keybind = ctrl+a>shift+5=new_split:right
+keybind = ctrl+a>shift+'=new_split:down
+# Примечание: если ваша раскладка клавиатуры не требует Shift для ввода % и ", 
+# можно продублировать их явно:
+# keybind = ctrl+a>%=new_split:right
+# keybind = ctrl+a>"=new_split:down
+
+# Навигация между панелями: префикс Ctrl+a, затем стрелки (как в Tmux по дефолту)
+keybind = ctrl+a>up=goto_split:top
+keybind = ctrl+a>down=goto_split:bottom
+keybind = ctrl+a>left=goto_split:left
+keybind = ctrl+a>right=goto_split:right
