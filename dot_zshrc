@@ -1,10 +1,9 @@
+# 1. Инициализация Homebrew (защита для под-оболочек, например, tmux)
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-export SHELL="/home/linuxbrew/.linuxbrew/bin/zsh"
-export SHELL="/home/linuxbrew/.linuxbrew/bin/zsh"
-export SHELL="/home/linuxbrew/.linuxbrew/bin/zsh"
 
 # 2. Пользовательские пути и профили
 export PATH="$HOME/.local/bin:$PATH"
+typeset -U path PATH
 [[ -f "$HOME/.local/bin/env" ]] && source "$HOME/.local/bin/env"
 [[ -f "$HOME/.profile" ]] && source "$HOME/.profile"
 
@@ -34,7 +33,7 @@ setopt hist_save_no_dups
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
-# 6. Менеджер плагинов Zinit (облегченная инициализация без лишних annex-ов)
+# 6. Менеджер плагинов Zinit
 ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
 if [[ ! -d $ZINIT_HOME ]]; then
     mkdir -p "${ZINIT_HOME:h}"
@@ -42,7 +41,6 @@ if [[ ! -d $ZINIT_HOME ]]; then
 fi
 source "$ZINIT_HOME/zinit.zsh"
 
-# Загрузка автодополнений и сниппетов
 zinit ice blockf
 zinit light zsh-users/zsh-completions
 zinit snippet OMZP::git
@@ -51,8 +49,6 @@ autoload -Uz compinit && compinit
 zinit cdreplay -q
 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
-
-# fzf-tab загружается сразу после compinit
 zinit light Aloxaf/fzf-tab
 
 # 7. Интеграции шелла
@@ -63,10 +59,10 @@ if command -v oh-my-posh >/dev/null 2>&1 && [[ -f "$HOME/.omp_linux_conf.toml" ]
 fi
 
 # 8. Алиасы
-alias l='eza -alF --icons'
-alias ls='eza -F --icons'
-alias lsz='eza -alF --icons --total-size'
-alias lt='eza -alF --icons -T -L3'
+alias l='eza -alF --icons=auto'
+alias ls='eza -F --icons=auto'
+alias lsz='eza -alF --icons=auto --total-size'
+alias lt='eza -alF --icons=auto -T -L3'
 alias c='clear'
 alias upd='brew update && brew upgrade && brew cleanup && flatpak update -y && flatpak uninstall --unused -y && zinit self-update && zinit update --all && npm up -g'
 alias v='nvim'
