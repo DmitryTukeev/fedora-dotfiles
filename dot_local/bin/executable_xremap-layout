@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""xremap-layout v3: конвертация раскладки EN<->RU через буфер обмена (GNOME/Wayland, xclip).
+
+  prepare                                  сохранить буфер пользователя, положить маркер
+  convert <word|selection> [en2ru|ru2en|auto]
+                                           дождаться копии, преобразовать, вернуть буфер
+"""
+import glob, os, re, shutil, subprocess, sys, time
+
+SENTINEL = "\u200b\u2063\u200b"
+RESTORE_DELAY = 1.0
+POLL_TIMEOUT = 0.12
+POLL_STEP = 0.01
+STATE_MAX_AGE = 3.0
+
+RT = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+STATE = os.path.join(RT, "xremap-layout.saved")
+LOCK = os.path.join(RT, "xremap-layout.lock")
+LOG = os.path.join(RT, "xremap-layout.log")
+
+EN = r"""`1234567890-=qwertyuiop[]\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:"ZXCVBNM<>?"""
+RU = r"""ё1234567890-=йцукенгшщзхъ\фывапролджэячсмитьбю.Ё!"№;%:?*()_+ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,"""
+assert len(EN) == len(RU)
+EN2RU = str.maketrans(EN, RU)
+RU2EN = str.maketrans(RU, EN)
+
+EN_CHARS = set("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM[]{}'`~@#$^&<>|")
+RU_CHARS = set("йцукенгшщзхъфывапролджэячсмитьбюёЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮЁ№")
+
+def log(msg: str) -> None:
+    try:
+        with open(LOG, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
+    except OSError:
+        pass
+
+def _xclip() -> str:
+    # xclip установлен системно через rpm-ostree
+    return shutil.which("xclip") or "xclip"
+
+def _env() -> dict:
+    env = os.environ.copy()
+    env.setdefault("DISPLAY", ":0")
+    if not env.get("XAUTHORITY"):
+        found = sorted(glob.glob(os.path.join(RT, ".mutter-Xwaylandauth.*")))
+        if found:
+            env["XAUTHORITY"] = found[-1]
+    return env
+
+def clip_get() -> str:
+    try:
+        r = subprocess.run(
+            [_xclip(), "-o", "-selection", "clipboard", "-t", "UTF8_STRING"],
+            capture_output=True, timeout=1.0, env=_env()
+        )
+        return r.stdout.decode("utf-8", "replace") if r.returncode == 0 else ""
+    except Exception as e:
+        log(f"clip_get error: {e}")
+        return ""
+
+def clip_set(text: str) -> None:
+    try:
+        p = subprocess.Popen(
+            [_xclip(), "-i", "-selection", "clipboard", "-t", "UTF8_STRING"],
+            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, env=_env(), start_new_session=True
+        )
+        if p.stdin:
+            p.stdin.write(text.encode("utf-8"))
+            p.stdin.close()
+        p.wait(timeout=1.0)
+    except Exception as e:
+        log(f"clip_set error: {e}")
+
+def resolve_direction(text: str, hint: str) -> str:
+    lat = sum(1 for c in text if c in EN_CHARS)
+    cyr = sum(1 for c in text if c in RU_CHARS)
+    if lat and not cyr: return "en2ru"
+    if cyr and not lat: return "ru2en"
+    if hint in ("en2ru", "ru2en"): return hint
+    return "ru2en" if cyr > lat else "en2ru"
+
+def convert_piece(text: str, hint: str) -> str:
+    d = resolve_direction(text, hint)
+    return text.translate(EN2RU if d == "en2ru" else RU2EN)
+
+def convert_last_word(text: str, hint: str) -> str:
+    m = re.match(r"^(.*?)(\S+)(\s*)\Z", text, re.S)
+    return text if not m else m.group(1) + convert_piece(m.group(2), hint) + m.group(3)
+
+def _state_is_fresh() -> bool:
+    try:
+        return time.time() - os.path.getmtime(STATE) < STATE_MAX_AGE
+    except OSError:
+        return False
+
+def cmd_prepare() -> None:
+    current = clip_get()
+    if current != SENTINEL and not _state_is_fresh():
+        fd = os.open(STATE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(current)
+    elif os.path.exists(STATE):
+        os.utime(STATE, None)
+    clip_set(SENTINEL)
+    log("prepare ok")
+
+def cmd_convert(scope: str, hint: str) -> None:
+    token = str(time.time_ns())
+    try:
+        with open(LOCK, "w", encoding="utf-8") as f: f.write(token)
+    except OSError: pass
+
+    cur, deadline = None, time.monotonic() + POLL_TIMEOUT
+    while time.monotonic() < deadline:
+        c = clip_get()
+        if c and c != SENTINEL:
+            cur = c
+            break
+        time.sleep(POLL_STEP)
+
+    if cur is None:
+        result = ""
+        log(f"convert {scope}: empty selection")
+    else:
+        result = convert_last_word(cur, hint) if scope == "word" else convert_piece(cur, hint)
+        log(f"convert {scope} ({hint}): {len(cur)} chars")
+    clip_set(result)
+
+    time.sleep(RESTORE_DELAY)
+    try:
+        with open(LOCK, encoding="utf-8") as f:
+            if f.read().strip() != token: return
+    except OSError: pass
+    try:
+        with open(STATE, encoding="utf-8") as f: saved = f.read()
+        os.remove(STATE)
+    except OSError: return
+    if clip_get() == result:
+        clip_set(saved)
+        log("restore ok")
+
+def main() -> None:
+    a = sys.argv[1:]
+    if a[:1] == ["prepare"]: cmd_prepare()
+    elif a[:1] == ["convert"] and len(a) >= 2 and a[1] in ("word", "selection"):
+        cmd_convert(a[1], a[2] if len(a) > 2 else "auto")
+    else: sys.exit(__doc__)
+
+if __name__ == "__main__": main()
