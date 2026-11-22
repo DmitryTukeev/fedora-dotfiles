@@ -53,7 +53,7 @@ zinit snippet OMZP::git
 zinit ice wait"0b" lucid atinit'zicompinit; zicdreplay'
 zinit light Aloxaf/fzf-tab
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=60'
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=146'
 zinit ice wait"0c" lucid atload'_zsh_autosuggest_start'
 zinit light zsh-users/zsh-autosuggestions
 
