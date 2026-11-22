@@ -61,6 +61,7 @@ keymap:
         - Shift-Insert
 
   - name: Global basics
+    exact_match: true
     remap:
       Ctrl_L-q: Esc
       Ctrl_L-leftbrace: Esc
@@ -73,11 +74,13 @@ keymap:
 
   - name: Track layout EN -> RU
     mode: default
+    exact_match: true
     remap:
       Super-space: [Super-space, { set_mode: ru }]
 
   - name: Track layout RU -> EN
     mode: ru
+    exact_match: true
     remap:
       Super-space: [Super-space, { set_mode: default }]
 
@@ -89,6 +92,7 @@ keymap:
 
   - name: Alt punctuation (EN)
     mode: default
+    exact_match: true
     remap:
       Alt_L-comma: comma
       Alt_L-dot: dot
@@ -97,6 +101,7 @@ keymap:
 
   - name: Alt punctuation (RU)
     mode: ru
+    exact_match: true
     remap:
       Alt_L-comma: Shift-slash
       Alt_L-dot: slash
