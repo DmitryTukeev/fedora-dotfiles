@@ -1,0 +1,175 @@
+default_mode: default
+
+modmap:
+  - name: CapsLock as Left Ctrl
+    remap:
+      CapsLock: Ctrl_L
+
+keymap:
+  - name: Layout convert word en2ru (non-terminal apps)
+    mode: default
+    exact_match: true
+    application:
+      not: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
+    remap:
+      Ctrl_L-i:
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout prepare"] }
+        - { sleep: 140 }
+        - Shift-Home
+        - { sleep: 30 }
+        - Ctrl-Insert
+        - { sleep: 60 }
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout convert word en2ru"] }
+        - { sleep: 200 }
+        - Shift-Insert
+        - { sleep: 40 }
+        - Super-space
+        - { set_mode: ru }
+
+  - name: Layout convert word ru2en (non-terminal apps)
+    mode: ru
+    exact_match: true
+    application:
+      not: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
+    remap:
+      Ctrl_L-i:
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout prepare"] }
+        - { sleep: 140 }
+        - Shift-Home
+        - { sleep: 30 }
+        - Ctrl-Insert
+        - { sleep: 60 }
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout convert word ru2en"] }
+        - { sleep: 200 }
+        - Shift-Insert
+        - { sleep: 40 }
+        - Super-space
+        - { set_mode: default }
+
+  - name: Layout convert selection (non-terminal apps)
+    exact_match: true
+    application:
+      not: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
+    remap:
+      Ctrl_L-Alt_L-i:
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout prepare"] }
+        - { sleep: 140 }
+        - Ctrl-Insert
+        - { sleep: 60 }
+        - { launch: ["sh", "-c", "$HOME/.local/bin/xremap-layout convert selection auto"] }
+        - { sleep: 200 }
+        - Shift-Insert
+
+  - name: Global basics
+    remap:
+      Ctrl_L-q: Esc
+      Ctrl_L-leftbrace: Esc
+      Ctrl_L-9: leftbrace
+      Ctrl_L-0: rightbrace
+      Ctrl_L-Alt_L-9: Shift-leftbrace
+      Ctrl_L-Alt_L-0: Shift-rightbrace
+      Super-q: Alt-F4
+      Shift-BTN_RIGHT: Enter
+
+  - name: Track layout EN -> RU
+    mode: default
+    remap:
+      Super-space: [Super-space, { set_mode: ru }]
+
+  - name: Track layout RU -> EN
+    mode: ru
+    remap:
+      Super-space: [Super-space, { set_mode: default }]
+
+  - name: Track layout shortcuts
+    exact_match: true
+    remap:
+      Ctrl_L-m: [Ctrl-m, { set_mode: default }]
+      Ctrl_L-comma: [Ctrl-comma, { set_mode: ru }]
+
+  - name: Alt punctuation (EN)
+    mode: default
+    remap:
+      Alt_L-comma: comma
+      Alt_L-dot: dot
+      Alt_L-slash: Shift-slash
+      Alt_L-semicolon: Shift-semicolon
+
+  - name: Alt punctuation (RU)
+    mode: ru
+    remap:
+      Alt_L-comma: Shift-slash
+      Alt_L-dot: slash
+      Alt_L-slash: Shift-7
+      Alt_L-semicolon: Shift-6
+
+  - name: Vim cursor
+    remap:
+      Alt_L-h: Left
+      Alt_L-Ctrl_L-h: Ctrl-Left
+      Alt_L-Shift-h: Shift-Left
+      Alt_L-Ctrl_L-Shift-h: Ctrl-Shift-Left
+      Alt_L-l: Right
+      Alt_L-Ctrl_L-l: Ctrl-Right
+      Alt_L-Shift-l: Shift-Right
+      Alt_L-Ctrl_L-Shift-l: Ctrl-Shift-Right
+      Alt_L-k: Up
+      Alt_L-Shift-k: Shift-Up
+      Alt_L-j: Down
+      Alt_L-Shift-j: Shift-Down
+      Alt_L-u: Home
+      Alt_L-Shift-u: Shift-Home
+      Alt_L-p: End
+      Alt_L-Shift-p: Shift-End
+      Alt_L-o: PageUp
+      Alt_L-Shift-o: Shift-PageUp
+      Alt_L-i: PageDown
+      Alt_L-Shift-i: Shift-PageDown
+
+  - name: Tabs and delete
+    remap:
+      Alt_L-w: Ctrl-Tab
+      Alt_L-q: Ctrl-Shift-Tab
+      Alt_L-d: Backspace
+      Alt_L-Shift-d: Delete
+
+  - name: Alt as Ctrl (non-terminal apps)
+    application:
+      not: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
+    remap:
+      Alt_L-a: Ctrl-a
+      Alt_L-s: Ctrl-s
+      Alt_L-z: Ctrl-z
+      Alt_L-x: Ctrl-x
+      Alt_L-c: Ctrl-c
+      Alt_L-v: Ctrl-v
+      Alt_L-Shift-v: Ctrl-Shift-v
+      Alt_L-f: Ctrl-f
+      Alt_L-r: Ctrl-r
+      Alt_L-t: Ctrl-t
+      Alt_L-Shift-t: Ctrl-Shift-t
+
+  - name: Alt as Ctrl+Shift (terminals)
+    application:
+      only: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
+    remap:
+      Alt_L-c: Ctrl-Shift-c
+      Alt_L-v: Ctrl-Shift-v
+      Alt_L-Shift-v: Ctrl-Shift-v
+      Alt_L-t: Ctrl-Shift-t
+      Alt_L-f: Ctrl-Shift-f
+
+  - name: Numpad layer
+    remap:
+      Ctrl_L-Shift-m: KEY_1
+      Ctrl_L-Shift-comma: KEY_2
+      Ctrl_L-Shift-dot: KEY_3
+      Ctrl_L-Shift-j: KEY_4
+      Ctrl_L-Shift-k: KEY_5
+      Ctrl_L-Shift-l: KEY_6
+      Ctrl_L-Shift-u: KEY_7
+      Ctrl_L-Shift-i: KEY_8
+      Ctrl_L-Shift-o: KEY_9
+      Ctrl_L-Shift-space: KEY_0
+      Ctrl_L-Shift-semicolon: KPPLUS
+      Ctrl_L-Shift-p: KPMINUS
