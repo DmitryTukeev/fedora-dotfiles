@@ -143,7 +143,6 @@ keymap:
       not: [com.mitchellh.ghostty, ghostty, org.gnome.Ptyxis, org.gnome.Terminal]
     remap:
       Alt_L-a: Ctrl-a
-      Alt_L-s: Ctrl-s
       Alt_L-z: Ctrl-z
       Alt_L-x: Ctrl-x
       Alt_L-c: Ctrl-c
